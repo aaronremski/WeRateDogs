@@ -36,7 +36,6 @@ import json
 from timeit import default_timer as timer
 
 
-
 # %% [markdown]
 # ## Gather Data #1 - Twitter archive
 
@@ -66,12 +65,10 @@ open("data/" + fname, 'wb').write(req.content)
 #  * only tweets on Aug 1st, 2017 (image predictions present)
 
 # %%
-
-# %%
-consumer_key = '3zhhip8Prz2WMil7d0mljLiwI'
-consumer_secret = '1aPALPmrd8xBzoovAQabAQJHRCWcijqyu4JJYMzn2S60s6T8iB'
-access_token = '175931642-unKWBdyHKcWLgt80FdW1dKFJ3wShN7125I8GsVUy'
-access_secret = 'HGRRbxzZKTfsYCiD90jGGyMdKSMuMaLmvWvv74ZDVx2z0'
+consumer_key = 'HIDDEN'
+consumer_secret = 'HIDDEN'
+access_token = 'HIDDEN'
+access_secret = 'HIDDEN'
 
 auth = OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
@@ -111,12 +108,16 @@ print(fails_dict)
 # ### I still do want to understand how to process the JSON 
 
 # %%
+# remove this code when submitting project
 with open('tweet.json', "r") as json_file:
     data = json.load(json_file)
     for tweet in data:
         print(f"ID: {tweet['id']}")
 
 # %%
+# Read tweet JSON into dataframe using pandas
+# recived ValueError: Trailing data without 'lines=True'
+
 rt_tweets = pd.read_json("tweet.json", lines=True)
 rt_tweets.head(5)
 
@@ -127,4 +128,6 @@ rt_tweets.columns
 rt_tweets[rt_tweets.retweeted == True]
 
 # %%
-rt_tweets.iloc[]
+rt_tweets.loc[0,'extended_entities']
+
+# %%
