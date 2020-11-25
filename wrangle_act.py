@@ -17,9 +17,20 @@
 # # WeRateDogs - Udacity Data Wrangling Project 03
 #
 #
-# ### 8 Quality Issues:
+# ### 8 Quality Issues. Also known as dirty data which includes mislabeled, corrupted, duplicated, inconsistent content issues
 #
-# ### 2 Tidiness Issues:
+# **Twitter-archive-enhanced.csv**
+#     1. timestamp is an object (string) and not of 'timestamp' type.
+#     2. A lot of missing data, 
+#         a. in_reply_to_status_id
+#         b. in_reply_to_user_id
+#         c. retweeted_status_id
+#         d. retweeted_status_user_id
+#         e. retweeted_status_timestamp
+#         f. 
+#         
+#
+# ### 2 Tidiness Issues. Messy data includes structural issues where variables don't form a column, observations form rows, & each observational unit forms a table.
 
 # %% [markdown]
 # ## Import Libraries
@@ -46,6 +57,9 @@ twitterDF.head(5)
 # %%
 twitterDF.info()
 
+# %%
+twitterDF[pd.isna(twitterDF.in_reply_to_status_id)]
+
 # %% [markdown]
 # ## Gather Data #2 - Tweet image predictions
 
@@ -54,6 +68,19 @@ file_url = "https://d17h27t6h515a5.cloudfront.net/topher/2017/August/599fd2ad_im
 req = requests.get(file_url)
 fname = os.path.basename(file_url)
 open("data/" + fname, 'wb').write(req.content)
+
+# %%
+image_preds = pd.read_csv("data/image-predictions.tsv", sep="\t")
+image_preds.head(5)
+
+# %%
+image_preds.info()
+
+# %%
+
+# %%
+
+# %%
 
 # %% [markdown]
 # ## Gather Data #3 - Query Twitter API for additional data
@@ -65,6 +92,8 @@ open("data/" + fname, 'wb').write(req.content)
 #  * only tweets on Aug 1st, 2017 (image predictions present)
 
 # %%
+# authenticate API using regenerated keys/tokens
+
 consumer_key = 'HIDDEN'
 consumer_secret = 'HIDDEN'
 access_token = 'HIDDEN'
@@ -129,5 +158,25 @@ rt_tweets[rt_tweets.retweeted == True]
 
 # %%
 rt_tweets.loc[0,'extended_entities']
+
+# %%
+rt_tweets.loc[115,'entities']
+
+# %%
+rt_tweets.loc[0,:]
+
+# %% [markdown]
+# ### Can't find retweets # or favorite #s from calls to API. Using code below as REFERENCE
+
+# %%
+tweet_cols = ['id','full_text','retweet_count','favorite_count','user']
+
+# %%
+tweets_sub = rt_tweets.loc[:,tweet_cols]
+tweets_sub.head(10)
+
+# %%
+
+# %%
 
 # %%
