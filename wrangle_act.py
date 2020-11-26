@@ -27,10 +27,14 @@
 #         c. retweeted_status_id
 #         d. retweeted_status_user_id
 #         e. retweeted_status_timestamp
-#         f. 
+#         
+#     3. 
 #         
 #
 # ### 2 Tidiness Issues. Messy data includes structural issues where variables don't form a column, observations form rows, & each observational unit forms a table.
+#
+# **Twitter-archive-enhanced.csv**
+#     1. Doggo, Floofer, Pupper, Puppo need restructuring. Replace None with 0 and value with 1
 
 # %% [markdown]
 # ## Import Libraries
@@ -58,7 +62,15 @@ twitterDF.head(5)
 twitterDF.info()
 
 # %%
-twitterDF[pd.isna(twitterDF.in_reply_to_status_id)]
+pd.isna(twitterDF.in_reply_to_status_id).value_counts()
+
+# %%
+twitterDF[pd.notnull(twitterDF.in_reply_to_status_id)].head(2)
+
+# %%
+twitterDF[twitterDF['floofer'] != 'None']
+
+# %%
 
 # %% [markdown]
 # ## Gather Data #2 - Tweet image predictions
