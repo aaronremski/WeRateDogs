@@ -12,10 +12,14 @@ In this project, one will gather, assess, and clean data then act on it through 
       c. anything else that's interesting.
 
 ## Assess
-Import data into dataframes and review for abnormalities, errors, etc. & document what needs cleaning.
+  * Import data into dataframes and review for abnormalities, errors, etc. & document what needs cleaning.<br/>
+  * Extract data from tweet data from tweets & combine with archived data & image predictions. 
+  * Determine 8 quality, & 2 tidiness issues.
+  
 
 ## Clean
-For the project, only 8 quality issues & at least 2 tidiness issues must be resolved. Merge datasets where appropriate
+  * Merge datasets where appropriate. 
+  * Clean quality & tidiness issues outlined in assessment stage
 
 
 
