@@ -113,7 +113,7 @@ twitterDF.name = np.where(twitterDF.name == 'a', np.NaN, twitterDF.name)
 twitterDF[twitterDF.name == 'a']
 
 # %% [markdown]
-# ## Q3 - doggo, floofer, pupper, & puppo use None; Replace with NaN, or 0
+# ## Q3 - doggo, floofer, pupper, & puppo use None; Replace with NaN, or 0, & 1 for present
 
 # %%
 # replace 'None' with 0
@@ -182,14 +182,22 @@ twitterDF.sample(5)
 # ## Q5 - remove retweets & delete columns
 
 # %%
-# review entries with retweeted ids
-twitterDF[pd.notnull(twitterDF.retweeted_status_id)].head(2)
+twitterDF.sample(2)
 
 # %%
-twitterDF['retweeted_status_id'].notna().count()
+twitterDF.info()
 
 # %%
-twitterDF = twitterDF[twitterDF['retweeted_status_id'].isnull()]
+# Get indices of rows to drop, in this case, any row with a value in retweeted_status_id different that NaN.  
+drop_these = twitterDF[twitterDF['retweeted_status_id'].notnull()].index
+twitterDF.drop(drop_these,inplace=True)
+twitterDF.sample(3)
+
+# %%
+# check if any 'notnull' entries exist in retweeted_status_id
+twitterDF[twitterDF['retweeted_status_id'].notnull()]
+
+# %%
 twitterDF.info()
 
 # %%
@@ -198,6 +206,8 @@ twitterDF.drop(drop_cols,axis=1,inplace=True)
 twitterDF.info()
 
 # %%
+twitterDF[twitterDF.in_reply_to_status_id.notnull()]
+
 
 # %% [markdown]
 # ## Gather Data #2 - Tweet image predictions
@@ -214,8 +224,6 @@ image_preds.sample(5)
 
 # %%
 image_preds.info()
-
-# %%
 
 # %% [markdown]
 # ## Gather Data #3 - Query Twitter API for additional data
@@ -269,14 +277,7 @@ print(end - start)
 print(fails_dict)
 
 # %% [markdown]
-# ### I still do want to understand how to process the JSON 
-
-# %% jupyter={"outputs_hidden": true}
-# remove this code when submitting project
-with open('tweet.json', "r") as json_file:
-    data = json.load(json_file)
-    for tweet in data:
-        print(f"ID: {tweet['id']}")
+# ### Pick up from here if data already obtained from Twitter
 
 # %%
 # Read tweet JSON into dataframe using pandas
@@ -311,11 +312,8 @@ rt_tweets.loc[115,'entities']
 # %% jupyter={"outputs_hidden": true}
 rt_tweets.loc[130,'user']
 
-# %% jupyter={"outputs_hidden": true}
-rt_tweets.loc[2000,'user']
-
 # %%
-rt_tweets.iloc[1:8,0:10]
+rt_tweets.iloc[1:8,11:]
 
 # %% jupyter={"outputs_hidden": true}
 # keeping only records of tweets that are NOT retweeted. Should have 2167 after filtering out non-null values of retweeted_status
@@ -331,8 +329,8 @@ tweet_cols = ['created_at','id','full_text','display_text_range','retweet_count'
 
 # %%
 # create new DF with column defined above
-tweets_sub = rt_tweets.loc[:,tweet_cols]
-tweets_sub.head(10)
+rt_tweets_sub = rt_tweets.loc[:,tweet_cols]
+rt_tweets_sub.head(10)
 
 # %%
 rt_tweets.drop('retweeted_status',axis=1,inplace=True)
@@ -341,6 +339,40 @@ rt_tweets.columns
 # %%
 rt_tweets[rt_tweets.]
 
+# %% [markdown]
+# ## Merge datasets
+#
+# ### twitterDF, rt_tweets_sub, image_preds
+
 # %%
+twitterDF.info()
+
+# %%
+rt_tweets_sub.info()
+
+# %%
+image_preds.info()
+
+# %%
+rt_tweets_sub = rt_tweets_sub.rename(columns={"id":"tweet_id"})
+rt_tweets_sub.head()
+
+# %%
+
+# %%
+new_tweets_df = pd.merge(rt_tweets_sub, twitterDF, on='tweet_id')
+new_tweets_df
+
+# %%
+new_tweets_df.info()
+
+# %%
+new_tweets_df2 = pd.merge(new_tweets_df, image_preds, on='tweet_id')
+
+# %%
+new_tweets_df2.head(5)
+
+# %%
+new_tweets_df2.info()
 
 # %%
