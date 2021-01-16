@@ -16,6 +16,10 @@
 # %% [markdown]
 # # WeRateDogs - Udacity Data Wrangling Project 03
 # ---
+# ## 3 datasets
+# 1. twitter-archive-enhanced.csv (local archive)
+# 2. rt_tweets (obtained data via Twitter API, to get additional fields that coorespond to IDs in twitter_archive)
+# 3. image_preds (local archive created from image recognition system
 # ## 8 Quality Issues 
 # Also known as dirty data which includes mislabeled, corrupted, duplicated, inconsistent content issues
 #
@@ -46,7 +50,7 @@
 #
 # 2. Messy data - variables form both rows and columns --> p1, p2, p3, p1_conf, p2_conf, p3_conf, etc. Pivot vars into 3 cols, prediction #, prediction name, prediction probability
 #
-# 3. Messy data - variables from both rows and columns --> doggo, floofer, pupper, puppo. Presumably the dog should only have 1 name? If so, this issue can been resolved with imperfection (which name to select when 2 or more given). If not, and multiple 'doggo' names are allowed, then is issue becomes moot.
+# 3. Messy data - variables from both rows and columns --> doggo, floofer, pupper, puppo. Presumably the dog should only have 1 name? If so, this issue can been resolved with imperfection (which name to select when 2 or more given). If not, and multiple 'doggo' names are allowed, then this issue becomes moot.
 #             
 
 # %% [markdown]
@@ -159,6 +163,8 @@ twitterDF.head(2)
 
 
 # %%
+# function to categorize source column
+
 def update_source(row):
     if 'iphone' in row:
         return 'iphone'
@@ -201,28 +207,34 @@ twitterDF[twitterDF['retweeted_status_id'].notnull()]
 twitterDF.info()
 
 # %%
+# get rid of 3 empty columns representing the retweeted tweets
 drop_cols = ['retweeted_status_id','retweeted_status_user_id','retweeted_status_timestamp']
 twitterDF.drop(drop_cols,axis=1,inplace=True)
 twitterDF.info()
 
 # %%
+# data exploration
+# see sample of is_reply_to_status_id...
 twitterDF[twitterDF.in_reply_to_status_id.notnull()]
-
 
 # %% [markdown]
 # ## Gather Data #2 - Tweet image predictions
 
 # %%
+# Download data from file_url utilizing requests library & save to line#5
 file_url = "https://d17h27t6h515a5.cloudfront.net/topher/2017/August/599fd2ad_image-predictions/image-predictions.tsv"
 req = requests.get(file_url)
 fname = os.path.basename(file_url)
 open("data/" + fname, 'wb').write(req.content)
 
 # %%
+# data exploration
+# Nows read file downloaded & view sample
 image_preds = pd.read_csv("data/image-predictions.tsv", sep="\t")
 image_preds.sample(5)
 
 # %%
+# data exploration
 image_preds.info()
 
 # %% [markdown]
@@ -235,6 +247,7 @@ image_preds.info()
 #  * only tweets on Aug 1st, 2017 (image predictions present)
 
 # %%
+# define keys & API info 
 # authenticate API using regenerated keys/tokens
 
 consumer_key = 'HIDDEN'
@@ -277,7 +290,7 @@ print(end - start)
 print(fails_dict)
 
 # %% [markdown]
-# ### Pick up from here if data already obtained from Twitter
+# ### Start from here if data already obtained from Twitter
 
 # %%
 # Read tweet JSON into dataframe using pandas
@@ -287,44 +300,46 @@ rt_tweets = pd.read_json("tweet.json", lines=True)
 rt_tweets.head(5)
 
 # %%
+# data exploration
 rt_tweets.info()
 
 # %%
+# data exploration
 rt_tweets[rt_tweets.retweeted_status.notnull()].head(5)
 
 # %%
+# data exploration
 rt_tweets.user
 
 # %%
+# data exploration
 rt_tweets.columns
 
-# %%
-rt_tweets[rt_tweets.retweeted == True]
-
 # %% jupyter={"outputs_hidden": true}
+# data exploration
 # inspect the extended entities data
 rt_tweets.loc[0,'extended_entities']
 
 # %% jupyter={"outputs_hidden": true}
+# data exploration
 # inspect the entities data
 rt_tweets.loc[115,'entities']
 
 # %% jupyter={"outputs_hidden": true}
+# data exploration
 rt_tweets.loc[130,'user']
 
 # %%
+# data exploration
 rt_tweets.iloc[1:8,11:]
 
 # %% jupyter={"outputs_hidden": true}
 # keeping only records of tweets that are NOT retweeted. Should have 2167 after filtering out non-null values of retweeted_status
 rt_tweets = rt_tweets[rt_tweets.retweeted_status.isnull()]
-rt_tweets.info()
+rt_tweets.sample(2)
 
 # %%
-rt_tweets.sample(3)
-
-# %%
-# add columns to this list for creating a new DF with only column we want only
+# add columns to this list for creating a new DF with only columns we want only
 tweet_cols = ['created_at','id','full_text','display_text_range','retweet_count','favorite_count','user']
 
 # %%
@@ -336,43 +351,164 @@ rt_tweets_sub.head(10)
 rt_tweets.drop('retweeted_status',axis=1,inplace=True)
 rt_tweets.columns
 
-# %%
-rt_tweets[rt_tweets.]
-
 # %% [markdown]
-# ## Merge datasets
+# ## Merge 3 datasets
 #
-# ### twitterDF, rt_tweets_sub, image_preds
+# 1. twitterDF
+# 2. rt_tweets_sub
+# 3. image_preds
 
 # %%
+# data exploration
 twitterDF.info()
 
 # %%
+# data exploration
 rt_tweets_sub.info()
 
 # %%
 image_preds.info()
 
 # %%
+# dataframe has a different name for its shared column, id --> tweet_id
 rt_tweets_sub = rt_tweets_sub.rename(columns={"id":"tweet_id"})
-rt_tweets_sub.head()
+rt_tweets_sub.head(5)
 
 # %%
-
-# %%
+# MERGE 2 dataframes!
 new_tweets_df = pd.merge(rt_tweets_sub, twitterDF, on='tweet_id')
-new_tweets_df
+new_tweets_df.head(3)
 
 # %%
+# data exploration
 new_tweets_df.info()
 
 # %%
+# MERGE newly merged dataframe and image_preds to get new_tweets_df2
 new_tweets_df2 = pd.merge(new_tweets_df, image_preds, on='tweet_id')
 
 # %%
+# data exploration
 new_tweets_df2.head(5)
 
 # %%
+# data exploration
 new_tweets_df2.info()
+
+# %%
+name_by_avgs = new_tweets_df2.groupby("p1")[['p1_conf','rating_numerator','rating_denominator','doggo','floofer','pupper','puppo','favorite_count',
+                             'retweet_count']].mean()
+name_by_avgs.head(10)
+
+# %%
+count_by_name = new_tweets_df2.groupby('p1')['p1_conf'].size()
+
+# %%
+count_by_name.head()
+
+# %%
+top10_names = count_by_name.sort_values().tail(10)
+top10_names
+
+# %%
+top10_names.index.values
+
+# %%
+top10_val_array = top10_names.values
+
+
+# %%
+top11to20_names = count_by_name.sort_values().tail(20)
+top10_names
+
+# %%
+
+# %%
+# Fixing random state for reproducibility
+np.random.seed(19680801)
+
+
+plt.rcdefaults()
+fig, ax = plt.subplots()
+
+# Example data
+#people = ('Tom', 'Dick', 'Harry', 'Slim', 'Jim')
+#performance = 3 + 10 * np.random.rand(len(people))
+
+people = top10_names.index.values 
+
+y_pos = np.arange(len(people))
+
+performance = top10_names.values
+error = np.random.rand(len(people))
+
+ax.barh(y_pos, performance, xerr=error, align='center')
+ax.set_yticks(y_pos)
+ax.set_yticklabels(people)
+ax.invert_yaxis()  # labels read top-to-bottom
+ax.set_xlabel('Dog Type (predicted) Count ')
+ax.set_title('WeRateDogs Dog Breeds represented (top 10)')
+
+plt.show()
+
+# %%
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
+
+names = top10_names.index.values 
+
+'''["225 g flour",
+          "90 g sugar",
+          "1 egg",
+          "60 g butter",
+          "100 ml milk",
+          "1/2 package of yeast"]
+'''
+
+data = top10_names.values
+
+wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+
+bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+kw = dict(arrowprops=dict(arrowstyle="-"),
+          bbox=bbox_props, zorder=0, va="center")
+
+for i, p in enumerate(wedges):
+    ang = (p.theta2 - p.theta1)/2. + p.theta1
+    y = np.sin(np.deg2rad(ang))
+    x = np.cos(np.deg2rad(ang))
+    horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
+    connectionstyle = "angle,angleA=0,angleB={}".format(ang)
+    kw["arrowprops"].update({"connectionstyle": connectionstyle})
+    ax.annotate(names[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
+                horizontalalignment=horizontalalignment, **kw)
+
+ax.set_title("WeRateDogs Top10 Name Distribution")
+
+plt.show()
+
+# %%
+name_by_avgs
+
+# %%
+new_tweets_df2.iloc[300:305,0:10]
+
+# %%
+new_tweets_df2.iloc[300:305,11:20]
+
+ # %%
+ '''doggo, floofer, pupper, puppo  '''
+
+desig = ['doggo', 'floofer', 'pupper', 'puppo']
+
+#new_tweets_df2.groupby(desig)[desig].mean()
+
+new_tweets_df2.doggo.mean()
+
+new_tweets_df2[desig].mean()
+
+# %%
+new_tweets_df2.name.value_counts()
 
 # %%
