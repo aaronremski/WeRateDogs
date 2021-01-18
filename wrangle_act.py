@@ -16,24 +16,25 @@
 # %% [markdown]
 # # WeRateDogs - Udacity Data Wrangling Project 03
 # ---
-# ## 3 datasets
-# 1. twitter-archive-enhanced.csv (local archive)
-# 2. rt_tweets (obtained data via Twitter API, to get additional fields that coorespond to IDs in twitter_archive)
-# 3. image_preds (local archive created from image recognition system
+# ## Gather 3 datasets from 3 different sources:
+# 1. [Gather Data #1](#gather1) - Twitter archive, twitter-archive-enhanced.csv (local archive)
+# 2. [Gather Data #2](#gather2) - Tweet image predictions - rt_tweets (obtained data via Twitter API, to get additional fields that coorespond to IDs in twitter_archive)
+# 3. [Gather Data #3](#gather3) - Query Twitter API for additional data - image_preds (local archive created from image recognition system)
+#
 # ## 8 Quality Issues 
 # Also known as dirty data which includes mislabeled, corrupted, duplicated, inconsistent content issues
 #
 # ### twitter-archive-enhanced.csv quality issues:
 #
-# 1. columns 'timestamp' & 'retweeted_status_timestamp' are objects (strings) and not of 'timestamp' type
+# 1. [Quality #1](#q1) - columns 'timestamp' & 'retweeted_status_timestamp' are objects (strings) and not of 'timestamp' type
 #
-# 2. numerous dog names are "a"; Replace with np.NaN
+# 2. [Quality #2](#q2) - numerous dog names are "a"; Replace with np.NaN
 #    
-# 3. doggo, floofer, pupper, & puppo use None; Replace with 0, and 1 where 'doggo, floofer, etc...' 
+# 3. [Quality #3](#q3) - doggo, floofer, pupper, & puppo use None; Replace with 0, and 1 where 'doggo, floofer, etc...' 
 #
-# 4. remove URL from 'source' & replace with 4 categories: iphone, vine, twitter, tweetdeck
+# 4. [Quality #4](#q4) - remove URL from 'source' & replace with 4 categories: iphone, vine, twitter, tweetdeck
 #
-# 5. remove retweets
+# 5. [Quality #5](#q5) - remove retweets
 #
 #
 # ---
@@ -43,7 +44,7 @@
 #
 # ### all 3 datasets tidiness issues:
 #
-# 1. merge all 3 datasets; remove unwanted columns
+# 1. [Tidy #1](#t1) - merge all 3 datasets; remove unwanted columns
 #
 #
 # ### image-predictions.tsv tidiness issues:
@@ -67,9 +68,14 @@ from tweepy import OAuthHandler
 import json
 from timeit import default_timer as timer
 
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.patches import ConnectionPatch
+# %matplotlib inline
+
 
 # %% [markdown]
-# ## Gather Data #1 - Twitter archive
+# ## <a name="gather1">Gather Data #1 - Twitter archive</a>
 
 # %%
 twitterDF = pd.read_csv("data/twitter-archive-enhanced.csv")
@@ -96,7 +102,8 @@ twitterDF.loc[200,'text']
 twitterDF[twitterDF['doggo'] != 'None'].sample(5)
 
 # %% [markdown]
-# ## Q1 - Convert dtype of timestamp columns
+# ## <a name="q1"> Q1 - Convert dtype of timestamp columns</a>
+#
 # Q1 = Quality Item #1
 
 # %%
@@ -106,7 +113,7 @@ twitterDF.retweeted_status_timestamp = pd.to_datetime(twitterDF.retweeted_status
 twitterDF.info()
 
 # %% [markdown]
-# ## Q2 - dog names = 'a', replace with NaN
+# ## <a name="q2"> Q2 - dog names = 'a', replace with NaN </a>
 
 # %%
 # replace puppo's names that match 'a' with NaN
@@ -117,7 +124,7 @@ twitterDF.name = np.where(twitterDF.name == 'a', np.NaN, twitterDF.name)
 twitterDF[twitterDF.name == 'a']
 
 # %% [markdown]
-# ## Q3 - doggo, floofer, pupper, & puppo use None; Replace with NaN, or 0, & 1 for present
+# ## <a name="q3"> Q3 - doggo, floofer, pupper, & puppo use None; Replace with NaN, or 0, & 1 for present </a>
 
 # %%
 # replace 'None' with 0
@@ -152,7 +159,7 @@ twitterDF[twitterDF.puppo == 'None'].count()
 twitterDF.query("floofer == 1")
 
 # %% [markdown]
-# ## Q4 - remove URL from 'source' & replace with 4 categories: iphone, vine, twitter, tweetdeck
+# ## <a name="q4"> Q4 - remove URL from 'source' & replace with 4 categories: iphone, vine, twitter, tweetdeck </a>
 
 # %%
 # review names of sources
@@ -185,13 +192,10 @@ twitterDF.source = twitterDF.apply(lambda row: update_source(row['source']),axis
 twitterDF.sample(5)
 
 # %% [markdown]
-# ## Q5 - remove retweets & delete columns
+# ## <a name="q5"> Q5 - remove retweets & delete columns </a>
 
 # %%
 twitterDF.sample(2)
-
-# %%
-twitterDF.info()
 
 # %%
 # Get indices of rows to drop, in this case, any row with a value in retweeted_status_id different that NaN.  
@@ -204,12 +208,13 @@ twitterDF.sample(3)
 twitterDF[twitterDF['retweeted_status_id'].notnull()]
 
 # %%
-twitterDF.info()
-
-# %%
 # get rid of 3 empty columns representing the retweeted tweets
 drop_cols = ['retweeted_status_id','retweeted_status_user_id','retweeted_status_timestamp']
 twitterDF.drop(drop_cols,axis=1,inplace=True)
+twitterDF.info()
+
+# %%
+# check to ensure cols dropped
 twitterDF.info()
 
 # %%
@@ -218,7 +223,7 @@ twitterDF.info()
 twitterDF[twitterDF.in_reply_to_status_id.notnull()]
 
 # %% [markdown]
-# ## Gather Data #2 - Tweet image predictions
+# ## <a name="gather2">Gather Data #2 - Tweet image predictions</a>
 
 # %%
 # Download data from file_url utilizing requests library & save to line#5
@@ -238,7 +243,7 @@ image_preds.sample(5)
 image_preds.info()
 
 # %% [markdown]
-# ## Gather Data #3 - Query Twitter API for additional data
+# ## <a name="gather3">Gather Data #3 - Query Twitter API for additional data</a>
 # Query Twitter's API for JSON data for each tweet ID in the Twitter archive
 #
 #  * retweet count
@@ -352,7 +357,7 @@ rt_tweets.drop('retweeted_status',axis=1,inplace=True)
 rt_tweets.columns
 
 # %% [markdown]
-# ## Merge 3 datasets
+# ## <a name="#t1">Merge 3 datasets</a>
 #
 # 1. twitterDF
 # 2. rt_tweets_sub
@@ -393,21 +398,24 @@ new_tweets_df2.head(5)
 
 # %%
 # data exploration
-new_tweets_df2.info()
+new_tweets_df2.name.isnull().count()
 
 # %%
-name_by_avgs = new_tweets_df2.groupby("p1")[['p1_conf','rating_numerator','rating_denominator','doggo','floofer','pupper','puppo','favorite_count',
-                             'retweet_count']].mean()
-name_by_avgs.head(10)
+# data exploration
+new_tweets_df2.loc[576,'expanded_urls']
+
+# %%
+# data exploration
+new_tweets_df2.info()
 
 # %%
 count_by_name = new_tweets_df2.groupby('p1')['p1_conf'].size()
 
 # %%
-count_by_name.head()
+count_by_name.sort_values(ascending=False)
 
 # %%
-top10_names = count_by_name.sort_values().tail(10)
+top10_names = count_by_name.sort_values(ascending=False).head(10)
 top10_names
 
 # %%
@@ -416,12 +424,6 @@ top10_names.index.values
 # %%
 top10_val_array = top10_names.values
 
-
-# %%
-top11to20_names = count_by_name.sort_values().tail(20)
-top10_names
-
-# %%
 
 # %%
 # Fixing random state for reproducibility
@@ -452,53 +454,18 @@ ax.set_title('WeRateDogs Dog Breeds represented (top 10)')
 plt.show()
 
 # %%
-import matplotlib.pyplot as plt
-
-fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
-
-names = top10_names.index.values 
-
-'''["225 g flour",
-          "90 g sugar",
-          "1 egg",
-          "60 g butter",
-          "100 ml milk",
-          "1/2 package of yeast"]
-'''
-
-data = top10_names.values
-
-wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
-
-bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-kw = dict(arrowprops=dict(arrowstyle="-"),
-          bbox=bbox_props, zorder=0, va="center")
-
-for i, p in enumerate(wedges):
-    ang = (p.theta2 - p.theta1)/2. + p.theta1
-    y = np.sin(np.deg2rad(ang))
-    x = np.cos(np.deg2rad(ang))
-    horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
-    connectionstyle = "angle,angleA=0,angleB={}".format(ang)
-    kw["arrowprops"].update({"connectionstyle": connectionstyle})
-    ax.annotate(names[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
-                horizontalalignment=horizontalalignment, **kw)
-
-ax.set_title("WeRateDogs Top10 Name Distribution")
-
-plt.show()
-
-# %%
-name_by_avgs
-
-# %%
+# Data Exploration
 new_tweets_df2.iloc[300:305,0:10]
 
 # %%
+# Data Exploration
 new_tweets_df2.iloc[300:305,11:20]
 
- # %%
- '''doggo, floofer, pupper, puppo  '''
+# %%
+## Data Exploration 
+## Averages of doggo, floofer, pupper, & puppo. Essentially, how often have these been designated
+
+## This means that 'doggo' was used to describe a pup 3.6% of the time
 
 desig = ['doggo', 'floofer', 'pupper', 'puppo']
 
@@ -509,6 +476,151 @@ new_tweets_df2.doggo.mean()
 new_tweets_df2[desig].mean()
 
 # %%
+## Data Exploration 
+## Names most used
+
 new_tweets_df2.name.value_counts()
 
 # %%
+top10_names.index.values
+
+# %%
+# Create grouping of dataframe on the first predicted name, p1, & obtained the mean of specific data points
+
+# This one provides appropriate columns but it correctly displayed the resulting dataframe in p1 alphabetic order
+# which is not statistically significant
+#name_by_avgs = new_tweets_df2.groupby("p1")[['p1_conf','rating_numerator','rating_denominator','doggo','floofer','pupper','puppo','favorite_count',
+#                             'retweet_count']].mean()
+
+name_by_avgs = new_tweets_df2.groupby(top10_names.index.values)[['p1_conf','rating_numerator','rating_denominator','doggo','floofer','pupper','puppo','favorite_count',
+                             'retweet_count']].mean()
+
+
+name_by_avgs.head(10)
+
+# %%
+name_by_avgs.index
+
+# %%
+name_by_avgs
+
+# %%
+#name_by_avgs.reset_index(inplace=True)
+
+# %%
+#name_by_avgs.rename(columns= {'p1':'probable_name', 'p1_conf':'probability'}, inplace=True)
+
+# %%
+favorites_by_name = name_by_avgs.loc[:,['favorite_count']]
+favorites_by_name
+
+# %%
+top15_favorites = favorites_by_name.iloc[0:15,:]
+top15_favorites
+
+# %% [markdown]
+# ## Notable analysis from visual bar chart
+#
+# ### None of the top 15 favorited 'dogs' were acturately identified as dogsl
+
+# %%
+# create sub
+favorites_by_name = name_by_avgs.loc[:,['favorite_count']]
+favorites_by_name.sort_values(by=['favorite_count'], ascending=False, inplace=True)
+# get top 15 of new subset to create visual from
+top15_favorites = favorites_by_name.iloc[0:15,:]
+group_names = top15_favorites.index
+group_data = top15_favorites.favorite_count
+
+# %%
+plt.style.use('fivethirtyeight')
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.barh(group_names, group_data)
+labels = ax.get_xticklabels()
+plt.setp(labels, rotation=45, horizontalalignment='right')
+ax.set(xlim=[-10000, 70000], xlabel='No. of favorited tweets', ylabel='Names (guessed by learning model)',
+       title='Top 15 Favorites (tweets), by probable name')
+
+plt.show;
+
+# %%
+name_by_avgs
+
+# %%
+# obtained directly from matplotlib examples @ 
+# https://matplotlib.org/gallery/pie_and_polar_charts/bar_of_pie.html#sphx-glr-gallery-pie-and-polar-charts-bar-of-pie-py
+
+## Attempt at Bar of Pie visualization
+
+# make figure and assign axis objects
+fig = plt.figure(figsize=(9, 5))
+ax1 = fig.add_subplot(121)
+ax2 = fig.add_subplot(122)
+fig.subplots_adjust(wspace=0)
+
+'''
+# pie chart parameters
+ratios = [.27, .56, .17]
+labels = ['Approve', 'Disapprove', 'Undecided']
+explode = [0.1, 0, 0]
+# rotate so that first wedge is split by the x-axis
+angle = -180 * ratios[0]
+ax1.pie(ratios, autopct='%1.1f%%', startangle=angle,
+        labels=labels, explode=explode)
+'''
+
+# pie chart parameters
+
+
+# rotate so that first wedge is split by the x-axis
+angle = -180 * ratios[0]
+ax1.pie(ratios, autopct='%1.1f%%', startangle=angle,
+        labels=labels, explode=explode)
+
+
+# bar chart parameters
+
+xpos = 0
+bottom = 0
+ratios = [.33, .54, .07, .06]
+width = .2
+colors = [[.1, .3, .5], [.1, .3, .3], [.1, .3, .7], [.1, .3, .9]]
+
+for j in range(len(ratios)):
+    height = ratios[j]
+    ax2.bar(xpos, height, width, bottom=bottom, color=colors[j])
+    ypos = bottom + ax2.patches[j].get_height() / 2
+    bottom += height
+    ax2.text(xpos, ypos, "%d%%" % (ax2.patches[j].get_height() * 100),
+             ha='center')
+
+ax2.set_title('Age of approvers')
+ax2.legend(('50-65', 'Over 65', '35-49', 'Under 35'))
+ax2.axis('off')
+ax2.set_xlim(- 2.5 * width, 2.5 * width)
+
+# use ConnectionPatch to draw lines between the two plots
+# get the wedge data
+theta1, theta2 = ax1.patches[0].theta1, ax1.patches[0].theta2
+center, r = ax1.patches[0].center, ax1.patches[0].r
+bar_height = sum([item.get_height() for item in ax2.patches])
+
+# draw top connecting line
+x = r * np.cos(np.pi / 180 * theta2) + center[0]
+y = r * np.sin(np.pi / 180 * theta2) + center[1]
+con = ConnectionPatch(xyA=(-width / 2, bar_height), coordsA=ax2.transData,
+                      xyB=(x, y), coordsB=ax1.transData)
+con.set_color([0, 0, 0])
+con.set_linewidth(4)
+ax2.add_artist(con)
+
+# draw bottom connecting line
+x = r * np.cos(np.pi / 180 * theta1) + center[0]
+y = r * np.sin(np.pi / 180 * theta1) + center[1]
+con = ConnectionPatch(xyA=(-width / 2, 0), coordsA=ax2.transData,
+                      xyB=(x, y), coordsB=ax1.transData)
+con.set_color([0, 0, 0])
+ax2.add_artist(con)
+con.set_linewidth(4)
+
+plt.show()
